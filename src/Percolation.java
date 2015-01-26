@@ -2,8 +2,8 @@ import java.util.BitSet;
 
 public class Percolation {
     private BitSet a;
-    private BitSet full;
     private int n;
+    private boolean percolates = false;
     private WeightedQuickUnionUF uf;
     private int[] c = {0, 0, -1, 1};
     private int[] d = {-1, 1, 0, 0};
@@ -13,15 +13,16 @@ public class Percolation {
             throw new IllegalArgumentException("exception");
         n = N;
         a = new BitSet(N * N);
-        full = new BitSet(N * N);
-        uf = new WeightedQuickUnionUF(n * n + 2);
+        uf = new WeightedQuickUnionUF(n * n + 1);
     }
 
     private void dfs(int i, int j) {
-        full.set(xyto1D(i, j));
+        uf.union(xyto1D(i, j), n * n);
+        if (i == n)
+            percolates = true;
         for (int k = 0; k < 4; k++) {
-            if (isValid(i + c[k], j + d[k]) && a.get(xyto1D(i+c[k], j+d[k]))
-                    && !full.get(xyto1D(i+c[k], j+d[k]))) {
+            if (isValid(i + c[k], j + d[k]) && isOpen(i+c[k], j+d[k])
+                    && !isFull(i + c[k], j + d[k])) {
                 dfs(i + c[k], j + d[k]);
             }
         }
@@ -37,8 +38,8 @@ public class Percolation {
         if (i == 1)
             needtofull = true;
         for (int k = 0; k < 4; k++)
-            if (isValid(i + c[k], j + d[k]) && a.get(xyto1D(i+c[k], j+d[k]))) {
-                if (full.get(xyto1D(i+c[k], j+d[k])))
+            if (isValid(i + c[k], j + d[k]) && isOpen(i+c[k], j+d[k])) {
+                if (isFull(i + c[k], j + d[k]))
                     needtofull = true;
                 uf.union(xyto1D(i, j), xyto1D(i + c[k], j + d[k]));
             }
@@ -46,8 +47,6 @@ public class Percolation {
             dfs(i, j);
         if (i == 1)
             uf.union(xyto1D(i, j), n * n);
-        if (i == n)
-            uf.union(xyto1D(i, j), n * n + 1);
     }
 
     private boolean isValid(int i, int j) {
@@ -67,11 +66,11 @@ public class Percolation {
     public boolean isFull(int i, int j) {
         if (!isValid(i, j))
             throw new IndexOutOfBoundsException("exception");
-        return full.get(xyto1D(i, j));
+        return uf.connected(xyto1D(i, j), n * n);
     }
 
     public boolean percolates() {
-        return uf.connected(n * n, n * n + 1);
+        return percolates;
     }
 
 
