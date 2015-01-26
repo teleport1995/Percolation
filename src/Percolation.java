@@ -14,14 +14,14 @@ public class Percolation {
         n = N;
         a = new BitSet(N * N);
         full = new BitSet(N * N);
-        uf = new WeightedQuickUnionUF(n * n + 2);
+        uf = new WeightedQuickUnionUF(n * n + 3);
     }
 
     private void dfs(int i, int j) {
         full.set(xyto1D(i, j));
         for (int k = 0; k < 4; k++) {
-            if (isValid(i + c[k], j + d[k]) && a.get(xyto1D(i+c[k], j+d[k]))
-                    && !full.get(xyto1D(i+c[k], j+d[k]))) {
+            if (isValid(i + c[k], j + d[k]) && isOpen(i+c[k], j+d[k])
+                    && !isFull(i+c[k], j+d[k])) {
                 dfs(i + c[k], j + d[k]);
             }
         }
@@ -37,8 +37,8 @@ public class Percolation {
         if (i == 1)
             needtofull = true;
         for (int k = 0; k < 4; k++)
-            if (isValid(i + c[k], j + d[k]) && a.get(xyto1D(i+c[k], j+d[k]))) {
-                if (full.get(xyto1D(i+c[k], j+d[k])))
+            if (isValid(i + c[k], j + d[k]) && isOpen(i+c[k], j+d[k])) {
+                if (isFull(i+c[k], j+d[k]))
                     needtofull = true;
                 uf.union(xyto1D(i, j), xyto1D(i + c[k], j + d[k]));
             }
