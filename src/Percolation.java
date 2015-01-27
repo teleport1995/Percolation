@@ -43,10 +43,11 @@ public class Percolation {
         }
     }
 
+    private boolean percolates;
     private MyBitSet a;
     private MyBitSet full;
     private int n;
-    private MyUF uf;
+    //private MyUF uf;
     private WeightedQuickUnionUF dop;
 
     public Percolation(int N) {
@@ -55,12 +56,14 @@ public class Percolation {
         n = N;
         a = new MyBitSet(N * N);
         full = new MyBitSet(N * N);
-        uf = new MyUF(n * n + 2);
+        //uf = new MyUF(n * n + 2);
         dop = new WeightedQuickUnionUF(2);
     }
 
     private void dfs(int i, int j, int[] c, int [] d) {
         full.set(xyto1D(i, j));
+        if (i == n)
+            percolates = true;
         for (int k = 0; k < 4; k++) {
             if (isValid(i + c[k], j + d[k]) && a.get(xyto1D(i+c[k], j+d[k]))
                     && !full.get(xyto1D(i+c[k], j+d[k]))) {
@@ -85,14 +88,9 @@ public class Percolation {
             if (isValid(i + c[k], j + d[k]) && a.get(xyto1D(i+c[k], j+d[k]))) {
                 if (full.get(xyto1D(i+c[k], j+d[k])))
                     needtofull = true;
-                uf.union(xyto1D(i, j), xyto1D(i + c[k], j + d[k]));
             }
         if (needtofull)
             dfs(i, j, c, d);
-        if (i == 1)
-            uf.union(xyto1D(i, j), n * n);
-        if (i == n)
-            uf.union(xyto1D(i, j), n * n + 1);
     }
 
     private boolean isValid(int i, int j) {
@@ -117,7 +115,7 @@ public class Percolation {
 
     public boolean percolates() {
         dop.connected(0, 1);
-        return uf.connected(n * n, n * n + 1);
+        return percolates;
     }
 
 
