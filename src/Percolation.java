@@ -3,16 +3,14 @@ public class Percolation {
     private class MyBitSet {
         private byte[] a;
 
-        public MyBitSet(int N) {
-            a = new byte[(N - 1) / 8 + 1];
-        }
+        public MyBitSet(int N) { a = new byte[(N - 1) / 8 + 1]; }
 
         public boolean get(int x) {
-            return (a[x / 8] & (1 << (x % 8))) != 0;
+            return (a[x >> 3] & (1 << (x & 7))) != 0;
         }
 
         public void set(int x) {
-            a[x / 8] |= 1 << (x % 8);
+            a[x >> 3] |= 1 << (x & 7);
         }
 
     }
@@ -43,24 +41,23 @@ public class Percolation {
         }
     }
 
-    private boolean percolates;
     private MyBitSet a;
-    private MyBitSet full;
+    private MyBitSet bottom;
     private int n;
-    //private MyUF uf;
-    private WeightedQuickUnionUF dop;
+    private WeightedQuickUnionUF uf;
 
     public Percolation(int N) {
         if (N <= 0)
             throw new IllegalArgumentException("exception");
         n = N;
-        a = new MyBitSet(N * N);
-        full = new MyBitSet(N * N);
-        //uf = new MyUF(n * n + 2);
-        dop = new WeightedQuickUnionUF(2);
+        a = new MyBitSet(n * n);
+        bottom = new MyBitSet(n * n + 1);
+        for (int i = 1; i <= n; i++)
+            bottom.set(xyto1D(n, i));
+        uf = new WeightedQuickUnionUF(n * n + 1);
     }
 
-    private void dfs(int i, int j, int[] c, int [] d) {
+    /*private void dfs(int i, int j, int[] c, int [] d) {
         full.set(xyto1D(i, j));
         if (i == n)
             percolates = true;
@@ -70,6 +67,13 @@ public class Percolation {
                 dfs(i + c[k], j + d[k], c, d);
             }
         }
+    }*/
+
+    private void connect(int i, int j) {
+        int ni = uf.find(i), nj = uf.find(j);
+        uf.union(ni, nj);
+        if (bottom.get(ni) || bottom.get(nj))
+            bottom.set(uf.find(ni));
     }
 
     public void open(int i, int j) {
@@ -77,20 +81,15 @@ public class Percolation {
             throw new IndexOutOfBoundsException("exception");
         if (isOpen(i, j))
             return;
-        dop.union(0, 1);
         int[] c = {0, 0, -1, 1};
         int[] d = {-1, 1, 0, 0};
         a.set(xyto1D(i, j));
-        boolean needtofull = false;
         if (i == 1)
-            needtofull = true;
+            connect(xyto1D(i, j), n * n);
         for (int k = 0; k < 4; k++)
             if (isValid(i + c[k], j + d[k]) && a.get(xyto1D(i+c[k], j+d[k]))) {
-                if (full.get(xyto1D(i+c[k], j+d[k])))
-                    needtofull = true;
+                connect(xyto1D(i, j), xyto1D(i + c[k], j + d[k]));
             }
-        if (needtofull)
-            dfs(i, j, c, d);
     }
 
     private boolean isValid(int i, int j) {
@@ -110,12 +109,11 @@ public class Percolation {
     public boolean isFull(int i, int j) {
         if (!isValid(i, j))
             throw new IndexOutOfBoundsException("exception");
-        return full.get(xyto1D(i, j));
+        return uf.connected(xyto1D(i, j), n * n);
     }
 
     public boolean percolates() {
-        dop.connected(0, 1);
-        return percolates;
+        return bottom.get(uf.find(n * n));
     }
 
 
